@@ -4,8 +4,10 @@
 Release history
 ===============
 
-0.7.6 (unreleased)
+0.8.0 (unreleased)
 ------------------
+
+* Drop support for Django 2.1 and lower.
 * Fix bugs `#241`_, `#242`_, `#243`_.
 
 .. _#241: https://github.com/jrief/django-admin-sortable2/issues/241

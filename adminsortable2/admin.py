@@ -8,20 +8,12 @@ from types import MethodType
 
 from django import forms
 from django.contrib.admin.views.main import ORDER_VAR
-# Remove check when support for python < 3 is dropped.
-import sys
-if sys.version_info[0] >= 3:
-    from django.utils.translation import gettext_lazy as _
-else:
-    from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.utils.safestring import mark_safe
 from django.conf.urls import url
 from django.core.exceptions import ImproperlyConfigured
 from django.core.paginator import EmptyPage
-try:
-    from django.urls import reverse
-except ImportError:  # Django<1.11
-    from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.db import router, transaction
 from django.db.models import Max, F
 from django.db.models.signals import post_save, pre_save
