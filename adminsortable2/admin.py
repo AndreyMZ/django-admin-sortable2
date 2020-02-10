@@ -5,9 +5,12 @@ import os
 import json
 from itertools import chain
 from types import MethodType
+from typing import Tuple, Optional, Dict, Any, List
 
 from django import forms
+from django.contrib.admin import ModelAdmin
 from django.contrib.admin.views.main import ORDER_VAR
+from django.db.models import Model
 from django.utils.translation import gettext_lazy as _
 from django.utils.safestring import mark_safe
 from django.conf.urls import url
@@ -20,7 +23,7 @@ from django.db.models.signals import post_save, pre_save
 from django.forms.models import BaseInlineFormSet
 from django.forms import widgets
 from django.http import (
-    HttpResponse, HttpResponseBadRequest,
+    HttpRequest, HttpResponse, HttpResponseBadRequest,
     HttpResponseNotAllowed, HttpResponseForbidden)
 from django.core.serializers.json import DjangoJSONEncoder
 from django.contrib import admin, messages
@@ -28,7 +31,7 @@ from django.contrib import admin, messages
 __all__ = ['SortableAdminMixin', 'SortableInlineAdminMixin']
 
 
-def _get_default_ordering(model, model_admin):
+def _get_default_ordering(model: Model, model_admin: ModelAdmin) -> Tuple[str, str]:
     try:
         # first try with the model admin ordering
         none, prefix, field_name = model_admin.ordering[0].rpartition('-')
@@ -92,7 +95,7 @@ class SortableAdminMixin(SortableAdminBase):
         self.default_order_direction, self.default_order_field = _get_default_ordering(model, self)
         super(SortableAdminMixin, self).__init__(model, admin_site)
         self.enable_sorting = False
-        self.order_by = None
+        self.order_by = None  # type: Optional[str]
         if not isinstance(self.exclude, (list, tuple)):
             self.exclude = [self.default_order_field]
         elif not self.exclude or self.default_order_field != self.exclude[0]:
@@ -164,7 +167,7 @@ class SortableAdminMixin(SortableAdminBase):
             self.enable_sorting = False
         return super(SortableAdminMixin, self).get_changelist(request, **kwargs)
 
-    def _get_first_ordering(self, request):
+    def _get_first_ordering(self, request: HttpRequest) -> Tuple[str, Optional[int]]:
         """
         Must be consistent with `django.contrib.admin.views.main.ChangeList.get_ordering`.
         """
@@ -259,11 +262,11 @@ class SortableAdminMixin(SortableAdminBase):
         self._bulk_move(request, queryset, self.LAST)
     move_to_last_page.short_description = _('Move selected to last page')
 
-    def _move_item(self, request, startorder, endorder):
+    def _move_item(self, request: HttpRequest, startorder: int, endorder: int) -> List[Dict[str, Any]]:
         extra_model_filters = self.get_extra_model_filters(request)
         return self.move_item(startorder, endorder, extra_model_filters)
 
-    def move_item(self, startorder, endorder, extra_model_filters = None):
+    def move_item(self, startorder: int, endorder: int, extra_model_filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
         model = self.model
         rank_field = self.default_order_field
 
@@ -327,13 +330,13 @@ class SortableAdminMixin(SortableAdminBase):
 
         return [{'pk': instance.pk, 'order': getattr(instance, rank_field)} for instance in chain(move_objs, [obj])]
 
-    def get_extra_model_filters(self, request):
+    def get_extra_model_filters(self, request: HttpRequest) -> Dict[str, Any]:
         """
         Returns additional fields to filter sortable objects
         """
         return {}
 
-    def get_max_order(self, request, obj=None):
+    def get_max_order(self, request: HttpRequest, obj=None) -> int:
         return self.model.objects.aggregate(max_order=Max(self.default_order_field))['max_order'] or 0
 
     def _bulk_move(self, request, queryset, method):

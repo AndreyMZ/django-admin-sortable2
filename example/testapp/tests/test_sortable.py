@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
+from typing import List, Tuple
 
 from django import VERSION as DJANGO_VERSION
 from django.urls import reverse
@@ -54,7 +55,7 @@ class SortableBookTestCase(TestCase):
         else:
             self.assertEqual(len(out_data), abs(endorder - startorder) + 1)
 
-    def assertOrder(self, pk_order_pairs):
+    def assertOrder(self, pk_order_pairs: List[Tuple[int, int]]) -> None:
         expected = [order for _, order in pk_order_pairs]
         actual = [SortableBook.objects.get(pk=pk).my_order for pk, _ in pk_order_pairs]
         self.assertEqual(expected, actual)
